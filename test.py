@@ -10,18 +10,31 @@ print("[TEST] POST /api/users =>", r.status_code)
 r = requests.get(url+"/api/users")
 print("[TEST] GET /api/users =>", r.status_code)
 
-
-old_user = "admin"  # Nombre de usuario actual
-new_user = "new_admin"  # Nuevo nombre de usuario
-new_password = "new_password_123"  # Nueva contraseña
+# Hace update de usuario y contraseña
+old_user = "admin"  
+new_user = "new_admin"  
+new_password = "new_password_123"  
 
 # Realizar la solicitud PUT para cambiar el nombre de usuario y la contraseña
 r = requests.put(f"{url}/api/users/{old_user}", json={"user": new_user, "password": new_password})
 
-# Verificar la respuesta
 print("[TEST] PUT /api/users/admin =>", r.status_code)
 print("[TEST] Response text =>", r.text)
 
+# Borrar base de datos de usuarios
+r = requests.get(url + "/api/users")
+
+
+if r.status_code == 200:
+    users = r.json()  
+    print(f"[TEST] GET /api/users => {r.status_code}, usuarios obtenidos: {users}")
+
+   
+    for user in users:
+        r = requests.delete(f"{url}/api/users/{user['user']}")  
+        print(f"[TEST] DELETE /api/users/{user['user']} =>", r.status_code, r.text)
+else:
+    print(f"[TEST] No se pudieron obtener los usuarios, status: {r.status_code}")
 
 
 r = requests.get(url+"/api/users/admin")
