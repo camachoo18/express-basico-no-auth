@@ -38,11 +38,32 @@ function createUser(user, password) {
     insertUserStatement.run(user, hash);
 }
 
-function updateUser(user, password){
-    const updateUserStatement = db.prepare("UPDATE users SET password = ? WHERE user = ?");
-    const hash = bcrypt.hashSync(password, saltRounds);
-    updateUserStatement.run(hash, user);
+function updateUser(oldUserName, newUserName, newPassword) {
+    // Verificar si el usuario antiguo existe
+    const user = getUser(oldUserName);
+    if (!user) {
+        throw new Error("El usuario antiguo no existe.");
+    }
+
+    // Verificar si el nuevo nombre de usuario ya está en uso (excepto cuando el nombre no cambia)
+    if (newUserName !== oldUserName && getUser(newUserName)) {
+        throw new Error("El nuevo nombre de usuario ya está en uso.");
+    }
+
+    // Si el nombre de usuario cambia, actualizar el nombre
+    if (newUserName && newUserName !== oldUserName) {
+        const updateUserNameStatement = db.prepare("UPDATE users SET user = ? WHERE user = ?");
+        updateUserNameStatement.run(newUserName, oldUserName);
+    }
+
+    // Si se pasa una nueva contraseña, actualizarla
+    if (newPassword) {
+        const hashedPassword = bcrypt.hashSync(newPassword, saltRounds);
+        const updatePasswordStatement = db.prepare("UPDATE users SET password = ? WHERE user = ?");
+        updatePasswordStatement.run(hashedPassword, oldUserName);
+    }
 }
+
 
 function validateUser(user, password) {
     const userObj = getUser(user);
