@@ -2,25 +2,23 @@ const express = require('express');
 const router = express.Router();
 const { createUser, getUser, getAllUsers, updateUser, deleteUser, validateUser } = require('../database');
 
-// Ruta para crear un nuevo usuario
 router.post('/users', (req, res) => {
-    const user = req.body.user;
+    const user = req.body.user; 
     const password = req.body.password;
     try {
         createUser(user, password);
         res.status(201).send('Usuario creado');
     } catch (err) {
-        res.status(500).send("Error al crear el usuario");
+        res.status(500).send("Usuario ya existe");
     }
 });
 
-// Ruta para obtener todos los usuarios
 router.get('/users', (req, res) => {
     res.json(getAllUsers());
 });
 
-// Ruta para obtener un usuario específico
 router.get('/users/:user', (req, res) => {
+    //TODO: cambiar if-else por try-catch
     const user = req.params.user;
     const userObj = getUser(user);
     if (userObj) {
@@ -30,26 +28,18 @@ router.get('/users/:user', (req, res) => {
     }
 });
 
-// Ruta para actualizar el usuario
 router.put('/users/:user', (req, res) => {
-    const oldUserName = req.params.user;
-    const newPassword = req.body.password;
-    const newUserName = req.body.user;
-
+    const user = req.params.user; //Parametros en la url para acceder al usuario que queremos
+    //const new_user = req.body.user;
+    const password = req.body.password; //Accedemos a la propiedad password de un usuario, para poder cambiarla
     try {
-        if (newUserName !== oldUserName && getUser(newUserName)) {
-            return res.status(400).send("El nuevo nombre de usuario ya está en uso.");
-        }
-
-        updateUser(oldUserName, newUserName, newPassword);
+        updateUser(user, password);
         res.status(200).send('Usuario actualizado');
     } catch (err) {
-        console.error("Error al actualizar el usuario:", err);
         res.status(500).send('Error al actualizar el usuario');
     }
 });
 
-// Ruta para eliminar un usuario
 router.delete('/users/:user', (req, res) => {
     const user = req.params.user;
     try {
@@ -60,37 +50,45 @@ router.delete('/users/:user', (req, res) => {
     }
 });
 
-// Ruta para login (autenticación con sesiones)
 router.post('/login', (req, res) => {
     const user = req.body.user;
     const password = req.body.password;
     const userObj = getUser(user);
 
     if (userObj && validateUser(user, password)) {
-        req.session.user = user;  // Guardamos el usuario en la sesión
+        // Guardamos el nombre del usuario en la sesión
+        req.session.user = user;
         res.status(200).send('Login correcto');
     } else {
         res.status(401).send('Login incorrecto');
     }
 });
 
-// Ruta para logout (cerrar sesión)
-router.post('/logout', (req, res) => {
-    req.session.destroy((err) => {  // Destruimos la sesión
-        if (err) {
-            return res.status(500).send('Error al cerrar sesión');
-        }
-        res.status(200).send('Sesión cerrada');
-    });
-});
 
-// Ruta para obtener la información del usuario desde la sesión
-router.get('/session', (req, res) => {
+//Middleware
+function isAuthenticated(req, res, next){
     if (req.session.user) {
-        res.json({ user: req.session.user });
+        next();
     } else {
+        res.status(401).send('Usuario no autenticado')
+    }
+};
+
+
+// Ruta para verificar si el usuario está autenticado
+router.get('/profile', isAuthenticated, (req, res) => {
+    if (req.session.user) {
+        // El usuario está autenticado
+        res.status(200).send(`Bienvenido ${req.session.user}`);
+    } else {
+        // El usuario no está autenticado
         res.status(401).send('No estás autenticado');
     }
+})
+
+router.post('/logout', (req, res) => {
+    req.session.destroy();
+    res.status(200).send('Logout correcto')
 });
 
 module.exports = router;
