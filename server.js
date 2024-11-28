@@ -1,6 +1,10 @@
-require('dotenv').config();  // Cargar las variables de entorno
+ // Cargar las variables de entorno
 // Ademas dotenv es util para añadir cierta seguridad a la clave y que no este visible,
 //de esta manera evitamos que cualquier persona acceda y asi solo lo veamos nosotros.
+
+const dotenv = require('dotenv')
+dotenv.config(); 
+SECRET = process.env.SECRET;
 
 const express = require('express');
 const session = require('express-session');
@@ -13,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configurar express-session usando la variable de entorno
 app.use(session({
-    secret: process.env.SESSION_SECRET,  // Usamos el valor desde .env
+    secret: SECRET,  // Usamos el valor desde .env
     resave: false,                      // No guardar la sesion si no hay cambios
     saveUninitialized: true,            // Guardar la sesion incluso si no esta inicializada
     cookie: { secure: false }           // En producción, deberías configurar esto como `true` con HTTPS
