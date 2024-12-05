@@ -4,7 +4,7 @@
 
 const dotenv = require('dotenv');
 dotenv.config();
-const SECRET = process.env.SESSION_SECRET;
+const COOKIE_SECRET = process.env.COOKIE_SECRET;
 
 const express = require('express');
 const session = require('express-session');
@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configuración de express-session
 app.use(session({
-    secret: SECRET, // Secreto para firmar la sesión
+    secret: COOKIE_SECRET, // Secreto para firmar la sesión
     resave: false, // No volver a guardar la sesión si no ha cambiado
     saveUninitialized: true, // Guardar sesiones sin inicializar
     cookie: { secure: false } // Cambiar a true si usas HTTPS
